@@ -1,0 +1,11 @@
+# Sensitive files (Passwords & keys)
+.env
+.env.backup
+.env.local
+
+# Composer packages (Heavy folder)
+vendor/
+
+# Server / Log files
+error_log
+*.log

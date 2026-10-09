@@ -74,13 +74,23 @@ class LeadController
 
     public static function index(): void
     {
-        $db = Database::connect();
 
-        $statement = $db->query(
-            'SELECT id, name, email, phone, address, message, status, lead_date, created_at, updated_at
-             FROM leads
-             ORDER BY id DESC'
-        );
+         $search = trim($_GET['search'] ?? '');
+
+        $db = Database::connect();
+          
+          $statement = $db->prepare(
+    'SELECT id, name, email, phone, address, message, status, lead_date, created_at, updated_at
+     FROM leads
+     WHERE name LIKE :search
+        OR email LIKE :search
+        OR phone LIKE :search
+     ORDER BY id DESC'
+);
+
+         $statement->execute([
+    'search' => '%' . $search . '%',
+]);
 
         $leads = $statement->fetchAll();
 

@@ -85,5 +85,98 @@ return [
     LeadController::delete();
 },
 
+
+// blog section start from here 
+
+
+
+'POST /api/v1/admin/blogs' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/BlogController.php';
+    BlogController::create();
+},
+
+
+'POST /api/v1/admin/blog/images' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/BlogController.php';
+    BlogController::uploadImage();
+},
+// blog list provide api 
+
+
+'GET /api/v1/admin/blogs' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/BlogController.php';
+    BlogController::index();
+},
+
+   // blog Show routes 
+'GET /api/v1/admin/blog' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/BlogController.php';
+    BlogController::show();
+},
+
+// blog update from here 
+
+
+'PATCH /api/v1/admin/blog' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/BlogController.php';
+    BlogController::update();
+},
+
+//blog delete methods 
+
+
+
+'DELETE /api/v1/admin/blog' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/BlogController.php';
+    BlogController::delete();
+},
+
+
+// blog publish options showing 
+
+
+'GET /api/v1/blogs' => function (): void {
+    require_once __DIR__ . '/../controllers/BlogController.php';
+    BlogController::publicIndex();
+},
+
+// blog draft to public posting feature
+
+
+'PATCH /api/v1/admin/blog/publish' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/BlogController.php';
+    BlogController::publish();
+},
+
+
+// single blog show 
+
+
+'GET /api/v1/blog' => function (): void {
+    require_once __DIR__ . '/../controllers/BlogController.php';
+    BlogController::publicShow();
+},
+
 ];
 

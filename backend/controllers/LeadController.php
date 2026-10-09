@@ -6,6 +6,7 @@ require_once __DIR__ . '/../config/database.php';
 
 class LeadController
 {
+    // Create a new lead
     public static function create(): void
     {
         $data = json_decode(file_get_contents('php://input'), true);
@@ -18,34 +19,33 @@ class LeadController
 
         if ($name === '' || $email === '' || $phone === '') {
             http_response_code(422);
-
             echo json_encode([
                 'success' => false,
                 'message' => 'Name, email and phone are required.',
             ]);
-
             return;
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             http_response_code(422);
-
             echo json_encode([
                 'success' => false,
                 'message' => 'Invalid email format.',
             ]);
-
             return;
         }
 
-        if (strlen($name) > 100 || strlen($email) > 150 || strlen($phone) > 20) {
+        if (
+            strlen($name) > 100 ||
+            strlen($email) > 150 ||
+            strlen($phone) > 20 ||
+            strlen($address) > 255
+        ) {
             http_response_code(422);
-
             echo json_encode([
                 'success' => false,
                 'message' => 'Input length is invalid.',
             ]);
-
             return;
         }
 
@@ -64,6 +64,8 @@ class LeadController
             'message' => $message,
         ]);
 
+        http_response_code(201);
+
         echo json_encode([
             'success' => true,
             'message' => 'Lead created successfully.',
@@ -71,26 +73,30 @@ class LeadController
         ]);
     }
 
-
+    // Get all leads, optionally search by name, email or phone
     public static function index(): void
     {
-
-         $search = trim($_GET['search'] ?? '');
+        $search = trim($_GET['search'] ?? '');
 
         $db = Database::connect();
-          
-          $statement = $db->prepare(
-    'SELECT id, name, email, phone, address, message, status, lead_date, created_at, updated_at
-     FROM leads
-     WHERE name LIKE :search
-        OR email LIKE :search
-        OR phone LIKE :search
-     ORDER BY id DESC'
-);
 
-         $statement->execute([
-    'search' => '%' . $search . '%',
-]);
+        $statement = $db->prepare(
+            'SELECT id, name, email, phone, address, message, status,
+                    lead_date, created_at, updated_at
+             FROM leads
+             WHERE name LIKE :name
+                OR email LIKE :email
+                OR phone LIKE :phone
+             ORDER BY id DESC'
+        );
+
+        $searchValue = '%' . $search . '%';
+
+        $statement->execute([
+            'name' => $searchValue,
+            'email' => $searchValue,
+            'phone' => $searchValue,
+        ]);
 
         $leads = $statement->fetchAll();
 
@@ -100,113 +106,142 @@ class LeadController
         ]);
     }
 
+    // Get one lead by ID
+    public static function show(): void
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
-   // lead Count in signle to multiple section 
+        if (!$id || $id < 1) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid lead ID.',
+            ]);
+            return;
+        }
 
-public static function show(): void
-{
-    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $db = Database::connect();
 
-    if (!$id) {
-        http_response_code(422);
+        $statement = $db->prepare(
+            'SELECT id, name, email, phone, address, message, status,
+                    lead_date, created_at, updated_at
+             FROM leads
+             WHERE id = :id
+             LIMIT 1'
+        );
+
+        $statement->execute(['id' => $id]);
+
+        $lead = $statement->fetch();
+
+        if (!$lead) {
+            http_response_code(404);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Lead not found.',
+            ]);
+            return;
+        }
 
         echo json_encode([
-            'success' => false,
-            'message' => 'Invalid lead ID.',
+            'success' => true,
+            'lead' => $lead,
         ]);
-
-        return;
     }
 
-    $db = Database::connect();
+    // Update a lead's status
+    public static function updateStatus(): void
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $data = json_decode(file_get_contents('php://input'), true);
 
-    $statement = $db->prepare(
-        'SELECT id, name, email, phone, address, message, status, lead_date, created_at, updated_at
-         FROM leads
-         WHERE id = :id
-         LIMIT 1'
-    );
+        $status = trim($data['status'] ?? '');
 
-    $statement->execute([
-        'id' => $id,
-    ]);
+        $allowedStatuses = [
+            'new',
+            'contacted',
+            'converted',
+            'closed',
+        ];
 
-    $lead = $statement->fetch();
+        if (
+            !$id || $id < 1 ||
+            !in_array($status, $allowedStatuses, true)
+        ) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid lead ID or status.',
+            ]);
+            return;
+        }
 
-    if (!$lead) {
-        http_response_code(404);
+        $db = Database::connect();
+
+        // Check whether the lead exists first
+        $check = $db->prepare(
+            'SELECT id FROM leads WHERE id = :id'
+        );
+        $check->execute(['id' => $id]);
+
+        if (!$check->fetch()) {
+            http_response_code(404);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Lead not found.',
+            ]);
+            return;
+        }
+
+        $statement = $db->prepare(
+            'UPDATE leads SET status = :status WHERE id = :id'
+        );
+
+        $statement->execute([
+            'status' => $status,
+            'id' => $id,
+        ]);
 
         echo json_encode([
-            'success' => false,
-            'message' => 'Lead not found.',
+            'success' => true,
+            'message' => 'Lead status updated successfully.',
         ]);
-
-        return;
     }
 
-    echo json_encode([
-        'success' => true,
-        'lead' => $lead,
-    ]);
+    // Delete one lead by ID
+    public static function delete(): void
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+
+        if (!$id || $id < 1) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid lead ID.',
+            ]);
+            return;
+        }
+
+        $db = Database::connect();
+
+        $statement = $db->prepare(
+            'DELETE FROM leads WHERE id = :id'
+        );
+
+        $statement->execute(['id' => $id]);
+
+        if ($statement->rowCount() === 0) {
+            http_response_code(404);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Lead not found.',
+            ]);
+            return;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Lead deleted successfully.',
+        ]);
+    }
 }
-
-
-// leads delete section code 
-
-public static function delete(): void
-{
-    // URL se lead ID lena
-    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-
-    // ID valid hai ya nahi
-    if (!$id) {
-        http_response_code(422);
-
-        echo json_encode([
-            'success' => false,
-            'message' => 'Invalid lead ID.',
-        ]);
-
-        return;
-    }
-
-    // Database connection
-    $db = Database::connect();
-
-    // Delete query
-    $statement = $db->prepare(
-        'DELETE FROM leads
-         WHERE id = :id'
-    );
-
-    // Query execute
-    $statement->execute([
-        'id' => $id,
-    ]);
-
-    // Check karo lead actually delete hui ya nahi
-    if ($statement->rowCount() === 0) {
-        http_response_code(404);
-
-        echo json_encode([
-            'success' => false,
-            'message' => 'Lead not found.',
-        ]);
-
-        return;
-    }
-
-    // Successful delete
-    echo json_encode([
-        'success' => true,
-        'message' => 'Lead deleted successfully.',
-    ]);
-}
-
-
-
-
-
-
-}
-

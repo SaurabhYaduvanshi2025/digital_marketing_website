@@ -611,5 +611,102 @@ public static function uploadImage(): void
     }
 }
 
+// delete gallery images 
+
+public static function deleteGalleryImage(): void
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+
+        if (!$id || $id < 1) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid image ID.',
+            ]);
+            return;
+        }
+
+        $db = Database::connect();
+
+        $stmt = $db->prepare('SELECT image_path FROM blog_images WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+        $image = $stmt->fetch();
+
+        if (!$image) {
+            http_response_code(404);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Image not found.',
+            ]);
+            return;
+        }
+
+        $deleteStmt = $db->prepare('DELETE FROM blog_images WHERE id = :id');
+        $deleteStmt->execute(['id' => $id]);
+
+        $fullPath = __DIR__ . '/../' . $image['image_path'];
+        if (is_file($fullPath)) {
+            unlink($fullPath);
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Gallery image deleted successfully.',
+        ]);
+    }
+
+
+    // 11. Update Gallery Image Details (alt_text, caption, sort_order)
+
+    public static function updateGalleryImage(): void
+    {
+        header('Content-Type: application/json');
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (!$id || $id < 1 || !is_array($data)) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid image ID or JSON payload.',
+            ]);
+            return;
+        }
+
+        $altText = trim($data['alt_text'] ?? '') ?: null;
+        $caption = trim($data['caption'] ?? '') ?: null;
+        $sortOrder = filter_var($data['sort_order'] ?? 0, FILTER_VALIDATE_INT);
+        if ($sortOrder === false || $sortOrder < 0) {
+            $sortOrder = 0;
+        }
+
+        $db = Database::connect();
+        $stmt = $db->prepare(
+            'UPDATE blog_images
+             SET alt_text = :alt_text, caption = :caption, sort_order = :sort_order
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'alt_text' => $altText,
+            'caption' => $caption,
+            'sort_order' => $sortOrder,
+            'id' => $id,
+        ]);
+
+        if ($stmt->rowCount() === 0) {
+            http_response_code(404);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Image not found or no values changed.',
+            ]);
+            return;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Image details updated successfully.',
+        ]);
+    }
+
 
 }

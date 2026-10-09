@@ -178,5 +178,27 @@ return [
     BlogController::publicShow();
 },
 
+
+// delete gallery images 
+
+'DELETE /api/v1/admin/blog/images' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/BlogController.php';
+    BlogController::deleteGalleryImage();
+},
+
+// update gallery images 
+
+'PATCH /api/v1/admin/blog/images' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/BlogController.php';
+    BlogController::updateGalleryImage();
+},
+
+
 ];
 

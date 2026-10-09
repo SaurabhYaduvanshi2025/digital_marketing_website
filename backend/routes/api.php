@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ . '/../controllers/DashboardController.php';
 require_once __DIR__ . '/../controllers/AuthController.php';
 require_once __DIR__ . '/../controllers/LeadController.php';
 
@@ -197,6 +197,17 @@ return [
 
     require_once __DIR__ . '/../controllers/BlogController.php';
     BlogController::updateGalleryImage();
+},
+
+//Dashboard route add
+
+
+
+'GET /api/v1/admin/dashboard' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    DashboardController::stats();
 },
 
 

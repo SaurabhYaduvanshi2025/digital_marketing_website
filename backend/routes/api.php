@@ -199,16 +199,95 @@ return [
     BlogController::updateGalleryImage();
 },
 
-//Dashboard route add
 
 
+ 
+// blog list 
 
-'GET /api/v1/admin/dashboard' => function (): void {
+'GET /api/v1/admin/blog/images' => function (): void {
     require_once __DIR__ . '/../middleware/AuthMiddleware.php';
     AuthMiddleware::handle();
 
+    require_once __DIR__ . '/../controllers/BlogController.php';
+    BlogController::listGalleryImages();
+},
+
+
+// Now dashbord section start from here 
+
+
+'GET /api/v1/admin/dashboard/stats' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/DashboardController.php';
     DashboardController::stats();
 },
+
+//Total leads aur new, contacted, converted, closed leads ki count return karega.
+
+'GET /api/v1/admin/dashboard/lead-stats' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/DashboardController.php';
+    DashboardController::leadStats();
+},
+
+//Latest 10 leads ki details return 
+
+'GET /api/v1/admin/dashboard/recent-leads' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/DashboardController.php';
+    DashboardController::recentLeads();
+},
+
+//API peginations
+
+'GET /api/v1/admin/leads' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/DashboardController.php';
+    DashboardController::listLeads();
+},
+
+
+//PHP syntax errors check
+
+
+'PATCH /api/v1/admin/lead/status' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/DashboardController.php';
+    DashboardController::updateLeadStatus();
+},
+
+//API and delete section on dashbord
+
+'DELETE /api/v1/admin/lead' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/DashboardController.php';
+    DashboardController::deleteLead();
+},
+
+//API  admin dashbord admin profile section 
+
+
+'GET /api/v1/admin/profile' => function (): void {
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+    AuthMiddleware::handle();
+
+    require_once __DIR__ . '/../controllers/DashboardController.php';
+    DashboardController::adminProfile();
+},
+
+
 
 
 ];

@@ -658,55 +658,161 @@ public static function deleteGalleryImage(): void
 
     // 11. Update Gallery Image Details (alt_text, caption, sort_order)
 
-    public static function updateGalleryImage(): void
-    {
-        header('Content-Type: application/json');
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-        $data = json_decode(file_get_contents('php://input'), true);
+// 11. Update Gallery Image Details
+public static function updateGalleryImage(): void
+{
+    header('Content-Type: application/json');
 
-        if (!$id || $id < 1 || !is_array($data)) {
-            http_response_code(422);
+    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+    $data = json_decode(file_get_contents('php://input'), true);
+
+    // Validate image ID and JSON payload
+    if (!$id || $id < 1 || !is_array($data)) {
+        http_response_code(422);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid image ID or JSON payload.',
+        ]);
+        return;
+    }
+
+    // Validate input fields
+    $altText = trim($data['alt_text'] ?? '');
+    $caption = trim($data['caption'] ?? '');
+
+    $sortOrder = filter_var(
+        $data['sort_order'] ?? 0,
+        FILTER_VALIDATE_INT
+    );
+
+    if (
+        mb_strlen($altText) > 255 ||
+        mb_strlen($caption) > 255 ||
+        $sortOrder === false ||
+        $sortOrder < 0 ||
+        $sortOrder > 255
+    ) {
+        http_response_code(422);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid image details or sort order.',
+        ]);
+        return;
+    }
+
+    try {
+        $db = Database::connect();
+
+        // Check whether the gallery image exists
+        $check = $db->prepare(
+            'SELECT id FROM blog_images WHERE id = :id'
+        );
+        $check->execute(['id' => $id]);
+
+        if (!$check->fetch()) {
+            http_response_code(404);
             echo json_encode([
                 'success' => false,
-                'message' => 'Invalid image ID or JSON payload.',
+                'message' => 'Gallery image not found.',
             ]);
             return;
         }
 
-        $altText = trim($data['alt_text'] ?? '') ?: null;
-        $caption = trim($data['caption'] ?? '') ?: null;
-        $sortOrder = filter_var($data['sort_order'] ?? 0, FILTER_VALIDATE_INT);
-        if ($sortOrder === false || $sortOrder < 0) {
-            $sortOrder = 0;
-        }
-
-        $db = Database::connect();
+        // Update image details
         $stmt = $db->prepare(
             'UPDATE blog_images
-             SET alt_text = :alt_text, caption = :caption, sort_order = :sort_order
+             SET alt_text = :alt_text,
+                 caption = :caption,
+                 sort_order = :sort_order
              WHERE id = :id'
         );
+
         $stmt->execute([
-            'alt_text' => $altText,
-            'caption' => $caption,
+            'alt_text' => $altText !== '' ? $altText : null,
+            'caption' => $caption !== '' ? $caption : null,
             'sort_order' => $sortOrder,
             'id' => $id,
         ]);
 
-        if ($stmt->rowCount() === 0) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Gallery image details updated successfully.',
+        ]);
+
+    } catch (Throwable $e) {
+        error_log($e->getMessage());
+
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Failed to update gallery image details.',
+        ]);
+    }
+}
+
+// 12. List Gallery Images for a Blog
+public static function listGalleryImages(): void
+{
+    header('Content-Type: application/json');
+
+    $blogId = filter_input(
+        INPUT_GET,
+        'blog_id',
+        FILTER_VALIDATE_INT
+    );
+
+    if (!$blogId || $blogId < 1) {
+        http_response_code(422);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Valid blog ID is required.',
+        ]);
+        return;
+    }
+
+    try {
+        $db = Database::connect();
+
+        // Check whether the blog exists
+        $check = $db->prepare(
+            'SELECT id FROM blogs WHERE id = :id'
+        );
+        $check->execute(['id' => $blogId]);
+
+        if (!$check->fetch()) {
             http_response_code(404);
             echo json_encode([
                 'success' => false,
-                'message' => 'Image not found or no values changed.',
+                'message' => 'Blog not found.',
             ]);
             return;
         }
 
+        // Fetch gallery images
+        $stmt = $db->prepare(
+            'SELECT id, blog_id, image_path, alt_text,
+                    caption, sort_order, created_at
+             FROM blog_images
+             WHERE blog_id = :blog_id
+             ORDER BY sort_order ASC, id ASC'
+        );
+
+        $stmt->execute(['blog_id' => $blogId]);
+
         echo json_encode([
             'success' => true,
-            'message' => 'Image details updated successfully.',
+            'images' => $stmt->fetchAll(PDO::FETCH_ASSOC),
+        ]);
+
+    } catch (Throwable $e) {
+        error_log($e->getMessage());
+
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Failed to retrieve gallery images.',
         ]);
     }
-
+}
 
 }

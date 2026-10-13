@@ -1,17 +1,74 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { checkAuthStatus } from "./store/slices/authSlice";
+
+// Layouts
+import PublicLayout from "./layouts/PublicLayout";
+// import AdminLayout from "./layouts/AdminLayout";
+
+// Guards
+import ProtectedRoute from "./components/ProtectedRoute";
+
+// Public Pages
+import Home from "./pages/public/Home";
+import About from "./pages/public/About";
+import Services from "./pages/public/Services";
+import ServiceDetail from "./pages/public/ServiceDetail";
+import Contact from "./pages/public/Contact";
+import Blogs from "./pages/public/Blogs";
+import BlogDetail from "./pages/public/BlogDetail";
+
+// Admin CMS Pages
+// import Login from "./pages/admin/Login";
+// import Dashboard from "./pages/admin/Dashboard";
+// import Leads from "./pages/admin/Leads";
+// import BlogsList from "./pages/admin/BlogsList";
+// import BlogEditor from "./pages/admin/BlogEditor";
 
 function App() {
-  const [message, setMessage] = useState("");
+  const dispatch = useDispatch();
 
+  // Page reload par session verify karna taaki admin logout na ho
   useEffect(() => {
-      fetch(`${import.meta.env.VITE_API_URL}/v1/health`)
-      .then((response) => response.json())
-      .then((data) => {
-        setMessage(data.message);
-      });
-  }, []);
+    dispatch(checkAuthStatus()).unwrap().catch(() => {
+      // Backend unreachable ya logged-out hone par silent handle
+    });
+  }, [dispatch]);
 
-  return <h1>{message}</h1>;
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* PUBLIC CLIENT PORTAL */}
+        <Route element={<PublicLayout />}>
+          <Route index element={<Home />} />
+          <Route path="about" element={<About />} />
+          <Route path="services" element={<Services />} />
+          <Route path="services/:slug" element={<ServiceDetail />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="blogs" element={<Blogs />} />
+          <Route path="blogs/:slug" element={<BlogDetail />} />
+        </Route>
+
+        {/* ADMIN AUTH */}
+        {/* <Route path="/admin/login" element={<Login />} /> */}
+
+        {/* SECURE ADMIN CMS ZONE */}
+        <Route element={<ProtectedRoute />}>
+          {/* <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="leads" element={<Leads />} />
+            <Route path="blogs" element={<BlogsList />} />
+            <Route path="blogs/new" element={<BlogEditor />} />
+            <Route path="blogs/:id/edit" element={<BlogEditor />} />
+          </Route> */}
+        </Route>
+
+        {/* FALLBACK (Unknown URLs ko Home par redirect karega) */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;

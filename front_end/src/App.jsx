@@ -15,9 +15,9 @@ import Home from "./pages/public/Home";
 import About from "./pages/public/About";
 import Services from "./pages/public/Services";
 import ServiceDetail from "./pages/public/ServiceDetail";
-// import Contact from "./pages/public/Contact";
-// import Blogs from "./pages/public/Blogs";
-// import BlogDetail from "./pages/public/BlogDetail";
+import Contact from "./pages/public/Contact";
+import Blogs from "./pages/public/Blogs";
+import BlogDetail from "./pages/public/BlogDetail";
 
 // Admin CMS Pages
 // import Login from "./pages/admin/Login";
@@ -45,9 +45,9 @@ function App() {
           <Route path="about" element={<About />} />
           <Route path="services" element={<Services />} />
           <Route path="services/:slug" element={<ServiceDetail />} />
-          {/* <Route path="contact" element={<Contact />} />
+          <Route path="contact" element={<Contact />} />
           <Route path="blogs" element={<Blogs />} />
-          <Route path="blogs/:slug" element={<BlogDetail />} /> */}
+          <Route path="blogs/:slug" element={<BlogDetail />} />
         </Route>
 
         {/* ADMIN AUTH */}

@@ -9,78 +9,25 @@ import {
   ShieldCheck, 
   Smartphone, 
   CloudLightning, 
-  Layers,
-  CheckCircle2
+  CheckCircle2 
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { servicesData } from "../../data/servicesData";
 
-const servicesList = [
-  {
-    id: "01",
-    title: "Full-Stack Web Architectures",
-    tagline: "Ultra-fast Next-gen Applications",
-    description: "Engineering scalable CMS, custom web apps, and modern SPAs powered by React, Node, and lightning-fast edge databases.",
-    icon: Code2,
-    gradient: "from-indigo-500/20 via-purple-500/10 to-transparent",
-    borderGlow: "group-hover:border-indigo-500/50",
-    features: ["Component-driven UI", "SSR & Edge Caching", "API & Headless CMS Integration"]
-  },
-  {
-    id: "02",
-    title: "Cloud & Microservices Backend",
-    tagline: "Resilient & Serverless",
-    description: "Designing robust REST and GraphQL APIs, distributed databases, authentication workflows, and automated deployment pipelines.",
-    icon: Database,
-    gradient: "from-cyan-500/20 via-blue-500/10 to-transparent",
-    borderGlow: "group-hover:border-cyan-500/50",
-    features: ["Zero-downtime scaling", "Secure OAuth2 / JWT", "Optimized Query Performance"]
-  },
-  {
-    id: "03",
-    title: "Cross-Platform Mobile Dev",
-    tagline: "Native Performance Everywhere",
-    description: "Fluid, high-framerate mobile experiences for iOS and Android built with unified architectures and shared business logic.",
-    icon: Smartphone,
-    gradient: "from-emerald-500/20 via-teal-500/10 to-transparent",
-    borderGlow: "group-hover:border-emerald-500/50",
-    features: ["Offline-first sync", "Fluid Gestures & Micro-interactions", "Biometric Security"]
-  },
-  {
-    id: "04",
-    title: "AI Integration & Automation",
-    tagline: "Intelligent Workflows",
-    description: "Embedding smart AI agents, contextual chatbots, semantic search, and predictive logic directly into existing business processes.",
-    icon: Cpu,
-    gradient: "from-amber-500/20 via-orange-500/10 to-transparent",
-    borderGlow: "group-hover:border-amber-500/50",
-    features: ["LLM Orchestration", "Automated pipelines", "Smart Analytics & Telemetry"]
-  },
-  {
-    id: "05",
-    title: "DevOps & Cloud Infrastructure",
-    tagline: "Continuous Delivery",
-    description: "CI/CD setup, container orchestration, automated testing suites, and proactive monitoring with sub-second incident alerts.",
-    icon: CloudLightning,
-    gradient: "from-pink-500/20 via-rose-500/10 to-transparent",
-    borderGlow: "group-hover:border-pink-500/50",
-    features: ["Docker & Kubernetes", "Vercel / AWS setups", "Proactive Monitoring"]
-  },
-  {
-    id: "06",
-    title: "Enterprise Security & Auditing",
-    tagline: "Zero-Trust Architecture",
-    description: "Deep security audits, code vulnerability checks, data encryption protocols, and complete GDPR/compliance alignment.",
-    icon: ShieldCheck,
-    gradient: "from-violet-500/20 via-purple-500/10 to-transparent",
-    borderGlow: "group-hover:border-violet-500/50",
-    features: ["Penetration testing", "Encrypted Data at Rest", "OWASP standard compliance"]
-  }
-];
+// Icons mapping for servicesData
+const iconMap = {
+  "web-architecture": Code2,
+  "cloud-backend": Database,
+  "mobile-dev": Smartphone,
+  "ai-automation": Cpu,
+  "devops-cloud": CloudLightning,
+  "security-auditing": ShieldCheck,
+};
 
-// Reusable Section Component (Home page ke liye bhi use ho sakta hai)
+// Reusable Section Component
 export function ServicesSnippet({ showAll = true, showTitle = true }) {
   const [activeService, setActiveService] = useState(null);
-  const displayedServices = showAll ? servicesList : servicesList.slice(0, 3);
+  const displayedServices = showAll ? servicesData : servicesData.slice(0, 3);
 
   return (
     <section className="relative w-full py-24 bg-black text-white overflow-hidden">
@@ -112,7 +59,10 @@ export function ServicesSnippet({ showAll = true, showTitle = true }) {
         {/* Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayedServices.map((service, index) => {
-            const Icon = service.icon;
+            const Icon = iconMap[service.slug] || Code2;
+            const isHovered = activeService === service.id;
+            const isAnyHovered = Boolean(activeService);
+
             return (
               <motion.div
                 key={service.id}
@@ -122,7 +72,13 @@ export function ServicesSnippet({ showAll = true, showTitle = true }) {
                 transition={{ duration: 0.4, delay: index * 0.1 }}
                 onMouseEnter={() => setActiveService(service.id)}
                 onMouseLeave={() => setActiveService(null)}
-                className={`group relative p-7 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-md transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.15)] flex flex-col justify-between overflow-hidden ${service.borderGlow}`}
+                className={`group relative p-7 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-md transition-all duration-300 flex flex-col justify-between overflow-hidden ${
+                  service.borderGlow
+                } ${
+                  isAnyHovered && !isHovered ? "opacity-45 scale-[0.98]" : "opacity-100 scale-100"
+                } ${
+                  isHovered ? "shadow-[0_0_35px_rgba(99,102,241,0.25)] border-indigo-500/40" : "hover:shadow-[0_0_30px_rgba(99,102,241,0.15)]"
+                }`}
               >
                 {/* Dynamic Card Glow */}
                 <div 
@@ -154,7 +110,7 @@ export function ServicesSnippet({ showAll = true, showTitle = true }) {
 
                   {/* Feature Bullets */}
                   <div className="space-y-2 pt-4 border-t border-white/5">
-                    {service.features.map((feat, i) => (
+                    {service.features.slice(0, 3).map((feat, i) => (
                       <div key={i} className="flex items-center gap-2 text-xs text-zinc-300">
                         <CheckCircle2 size={13} className="text-indigo-400 shrink-0" />
                         <span>{feat}</span>
@@ -163,13 +119,16 @@ export function ServicesSnippet({ showAll = true, showTitle = true }) {
                   </div>
                 </div>
 
-                {/* Bottom Interactive Arrow */}
-                <div className="relative z-10 mt-8 pt-4 flex items-center justify-between text-xs font-semibold text-zinc-400 group-hover:text-white transition-colors">
+                {/* Bottom Interactive Arrow - Now Clickable Route */}
+                <Link
+                  to={`/services/${service.slug}`}
+                  className="relative z-10 mt-8 pt-4 flex items-center justify-between text-xs font-semibold text-zinc-400 group-hover:text-white transition-colors"
+                >
                   <span>Explore Details</span>
                   <div className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white group-hover:translate-x-1 group-hover:-translate-y-1 transition-all">
                     <ArrowUpRight size={14} />
                   </div>
-                </div>
+                </Link>
               </motion.div>
             );
           })}

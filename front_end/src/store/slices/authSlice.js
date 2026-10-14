@@ -7,7 +7,7 @@ export const checkAuthStatus = createAsyncThunk(
   'auth/checkAuthStatus',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/admin/status');
+      const response = await api.get('/admin/me');
       // Backend response se admin data return karega
       return response.data.admin;
     } catch (err) {
@@ -61,6 +61,7 @@ const authSlice = createSlice({
       // Check Auth Cases
       .addCase(checkAuthStatus.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(checkAuthStatus.fulfilled, (state, action) => {
         state.admin = action.payload;

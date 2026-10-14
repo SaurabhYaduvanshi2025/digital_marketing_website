@@ -1,8 +1,9 @@
 // src/components/ProtectedRoute.jsx
 import { useSelector } from 'react-redux';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 export default function ProtectedRoute() {
+  const location = useLocation();
   // Redux store se state extract karna
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
 
@@ -19,5 +20,7 @@ export default function ProtectedRoute() {
   }
 
   // Agar logged in hai toh child route (Dashboard, Leads, etc.) khulega, warna /admin/login par bhej dega
-  return isAuthenticated ? <Outlet /> : <Navigate to="/admin/login" replace />;
+  return isAuthenticated
+    ? <Outlet />
+    : <Navigate to="/admin/login" replace state={{ from: location }} />;
 }

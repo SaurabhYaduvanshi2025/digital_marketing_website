@@ -301,6 +301,58 @@ public static function delete(): void
 // blog publish options showing 
 
 
+public static function publicGallery(): void
+{
+    header('Content-Type: application/json');
+
+    $blogId = filter_input(INPUT_GET, 'blog_id', FILTER_VALIDATE_INT);
+    if (!$blogId || $blogId < 1) {
+        http_response_code(422);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Valid blog ID is required.',
+        ]);
+        return;
+    }
+
+    try {
+        $db = Database::connect();
+        $publishedBlog = $db->prepare(
+            "SELECT id FROM blogs WHERE id = :id AND status = 'published' LIMIT 1"
+        );
+        $publishedBlog->execute(['id' => $blogId]);
+
+        if (!$publishedBlog->fetch()) {
+            http_response_code(404);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Published blog not found.',
+            ]);
+            return;
+        }
+
+        $statement = $db->prepare(
+            'SELECT id, blog_id, image_path, alt_text, caption, sort_order
+             FROM blog_images
+             WHERE blog_id = :blog_id
+             ORDER BY sort_order ASC, id ASC'
+        );
+        $statement->execute(['blog_id' => $blogId]);
+
+        echo json_encode([
+            'success' => true,
+            'images' => $statement->fetchAll(PDO::FETCH_ASSOC),
+        ]);
+    } catch (Throwable $e) {
+        error_log($e->getMessage());
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Failed to retrieve blog gallery images.',
+        ]);
+    }
+}
+
 public static function publicIndex(): void
 {
     $db = Database::connect();

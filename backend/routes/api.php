@@ -153,6 +153,11 @@ return [
 // blog publish options showing 
 
 
+'GET /api/v1/blog/images' => function (): void {
+    require_once __DIR__ . '/../controllers/BlogController.php';
+    BlogController::publicGallery();
+},
+
 'GET /api/v1/blogs' => function (): void {
     require_once __DIR__ . '/../controllers/BlogController.php';
     BlogController::publicIndex();

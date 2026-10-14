@@ -12,19 +12,18 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 // Public Pages
 import Home from "./pages/public/Home";
+import Login from "./pages/admin/Login";
+import Dashboard from "./pages/admin/Dashboard";
+import Leads from "./pages/admin/Leads";
+import BlogsList from "./pages/admin/BlogsList";
+import BlogEditor from "./pages/admin/BlogEditor";
+import AdminLayout from "./layouts/AdminLayout";
 import About from "./pages/public/About";
 import Services from "./pages/public/Services";
 import ServiceDetail from "./pages/public/ServiceDetail";
 import Contact from "./pages/public/Contact";
 import Blogs from "./pages/public/Blogs";
 import BlogDetail from "./pages/public/BlogDetail";
-
-// Admin CMS Pages
-// import Login from "./pages/admin/Login";
-// import Dashboard from "./pages/admin/Dashboard";
-// import Leads from "./pages/admin/Leads";
-// import BlogsList from "./pages/admin/BlogsList";
-// import BlogEditor from "./pages/admin/BlogEditor";
 
 function App() {
   const dispatch = useDispatch();
@@ -50,18 +49,16 @@ function App() {
           <Route path="blogs/:slug" element={<BlogDetail />} />
         </Route>
 
-        {/* ADMIN AUTH */}
-        {/* <Route path="/admin/login" element={<Login />} /> */}
+        <Route path="/admin/login" element={<Login />} />
 
-        {/* SECURE ADMIN CMS ZONE */}
         <Route element={<ProtectedRoute />}>
-          {/* <Route path="/admin" element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="leads" element={<Leads />} />
             <Route path="blogs" element={<BlogsList />} />
             <Route path="blogs/new" element={<BlogEditor />} />
             <Route path="blogs/:id/edit" element={<BlogEditor />} />
-          </Route> */}
+          </Route>
         </Route>
 
         {/* FALLBACK (Unknown URLs ko Home par redirect karega) */}

@@ -12,6 +12,7 @@ import {
   User, 
   Loader2 
 } from "lucide-react";
+import api from "../../api/axios";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -39,28 +40,16 @@ export default function Contact() {
     setErrorMsg("");
 
     try {
-      // ⚠️ Apne PHP backend endpoint ka URL yahan daalein (e.g., http://localhost/api/contact.php)
-      const res = await fetch("http://localhost/api/contact.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const { data } = await api.post("/leads", formData);
 
-      const data = await res.json();
-
-      if (res.ok && data.status !== "error") {
+      if (data?.success) {
         setShowSuccess(true);
         setFormData({ name: "", email: "", phone: "", address: "", message: "" });
       } else {
-        setErrorMsg(data.message || "Failed to submit. Please try again.");
+        setErrorMsg(data?.message || "Failed to submit. Please try again.");
       }
-    } catch (err) {
-      // Offline / Test environment fallback (taaki frontend test kar sakein)
-      console.log("Submit fallback for testing:", err);
-      setShowSuccess(true);
-      setFormData({ name: "", email: "", phone: "", address: "", message: "" });
+    } catch (requestError) {
+      setErrorMsg(requestError.response?.data?.message || "Could not send your enquiry. Please try again.");
     } finally {
       setLoading(false);
     }
